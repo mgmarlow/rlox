@@ -6,6 +6,7 @@ module Rlox
   class Error < StandardError; end
 
   class Token
+    # rubocop:disable Lint/BooleanSymbol
     TOKEN_TYPES = [
       # single-character tokens.
       :left_paren, :right_paren, :left_brace, :right_brace,
@@ -25,7 +26,8 @@ module Rlox
       :print, :return, :super, :this, :true, :var, :while,
 
       :eof
-    ]
+    ].freeze
+    # rubocop:enable Lint/BooleanSymbol
 
     attr_reader :type, :lexeme, :literal, :line
 
@@ -39,11 +41,32 @@ module Rlox
     end
 
     def to_s
-      "#{TOKEN_TYPES.find_index(type)} #{lexeme} #{literal}"
+      "#{type} #{lexeme} #{literal}"
     end
   end
 
   class Scanner
+    # rubocop:disable Lint/BooleanSymbol
+    KEYWORDS = {
+      "and" => :and,
+      "class" => :class,
+      "else" => :else,
+      "false" => :false,
+      "for" => :for,
+      "fun" => :fun,
+      "if" => :if,
+      "nil" => :nil,
+      "or" => :or,
+      "print" => :print,
+      "return" => :return,
+      "super" => :super,
+      "this" => :this,
+      "true" => :true,
+      "var" => :var,
+      "while" => :while
+    }.freeze
+    # rubocop:enable Lint/BooleanSymbol
+
     def initialize(source)
       @source = source
       @tokens = []
@@ -53,7 +76,7 @@ module Rlox
     end
 
     def scan_tokens
-      until over? do
+      until done?
         @start = @current
         scan_token
       end
@@ -62,47 +85,147 @@ module Rlox
       @tokens
     end
 
-    def over?
+    def done?
       @current >= @source.length
     end
 
     private
 
     def scan_token
-      case advance
+      c = advance
+
+      case c
       when "("
         add_token(:left_paren)
       when ")"
         add_token(:right_paren)
-      when '{'
+      when "{"
         add_token(:left_brace)
-      when '}'
+      when "}"
         add_token(:right_brace)
-      when ','
+      when ","
         add_token(:comma)
-      when '.'
+      when "."
         add_token(:dot)
-      when '-'
+      when "-"
         add_token(:minus)
-      when '+'
+      when "+"
         add_token(:plus)
-      when ';'
+      when ";"
         add_token(:semicolon)
-      when '*'
+      when "*"
         add_token(:star)
+      when "!"
+        add_token(match?("=") ? :bang_equal : :bang)
+      when "="
+        add_token(match?("=") ? :equal_equal : :equal)
+      when "<"
+        add_token(match?("=") ? :less_equal : :less)
+      when ">"
+        add_token(match?("=") ? :greater_equal : :greater)
+      when "/"
+        if match?("/")
+          # Comments go until end of line; ignored.
+          advance while peek != "\n" && !done?
+        else
+          add_token(:slash)
+        end
+      when '"'
+        string
+      when /[[:digit:]]/
+        number
+      when /[[:alpha:]]/
+        identifier
+      when " ", "\r", "\t"
+        # Ignore whitespace.
+      when "\n"
+        @line += 1
       else
         Lox.error(@line, "unexpected character")
       end
     end
 
     def advance
-      @current = @current + 1
-      @source[@current]
+      ch = @source[@current]
+      @current += 1
+      ch
     end
 
     def add_token(type, literal = nil)
-      text = @source[@start..@current]
+      text = @source[@start...@current]
       @tokens << Token.new(type, text, literal, @line)
+    end
+
+    def match?(ch)
+      return false if done?
+      return false if @source[@current] != ch
+
+      @current += 1
+      true
+    end
+
+    def peek
+      return "\0" if done?
+
+      @source[@current]
+    end
+
+    def peek_next
+      return "\0" if @current + 1 >= @source.length
+
+      @source[@current + 1]
+    end
+
+    def is_digit?(ch)
+      ch.match?(/[[:digit:]]/)
+    end
+
+    def is_alpha?(ch)
+      ch.match?(/[[:alpha:]_]/)
+    end
+
+    def is_alphanumeric?(ch)
+      is_digit?(ch) || is_alpha?(ch)
+    end
+
+    def string
+      until peek == '"' || done?
+        @line += 1 if peek == "\n"
+
+        advance
+      end
+
+      if done?
+        Lox.error(@line, "unterminated string")
+      end
+
+      # Closing ".
+      advance
+
+      # Trim surrounding quotes.
+      value = @source[(@start + 1)...(@current - 1)]
+      add_token(:string, value)
+    end
+
+    def number
+      advance while is_digit?(peek)
+
+      if peek != "." && is_digit?(peek_next)
+        advance
+
+        advance while is_digit?(peek)
+      end
+
+      add_token(:number, @source[@start...@current].to_f)
+    end
+
+    def identifier
+      advance while is_alphanumeric?(peek)
+
+      text = @source[@start...@current]
+      type = KEYWORDS[text] || :identifier
+
+      add_token(type)
     end
   end
 
@@ -123,7 +246,7 @@ module Rlox
     def run_file(file)
       contents = File.read(file)
       run(contents)
-      return if had_error?
+      nil if had_error?
     end
 
     def had_error?
@@ -153,8 +276,8 @@ module Rlox
   class CLI
     def run
       if ARGV.length > 1
-        puts "Usage: rlox [script]" 
-        return
+        puts "Usage: rlox [script]"
+        nil
       elsif ARGV.length == 1
         Lox.new.run_file(ARGV[0])
       else
