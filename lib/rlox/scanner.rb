@@ -63,6 +63,8 @@ module Rlox
     }.freeze
     # rubocop:enable Lint/BooleanSymbol
 
+    attr_reader :line, :tokens
+
     def initialize(source)
       @source = source
       @tokens = []
@@ -88,9 +90,7 @@ module Rlox
     private
 
     def scan_token
-      c = advance
-
-      case c
+      case advance
       when "("
         add_token(:left_paren)
       when ")"
