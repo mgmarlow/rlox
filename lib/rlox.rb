@@ -2,9 +2,9 @@
 
 require_relative "rlox/version"
 require_relative "rlox/scanner"
-require_relative "rlox/expression_builder"
-
-Rlox.build_expression_classes
+require_relative "rlox/expr"
+require_relative "rlox/visitor"
+require_relative "rlox/visitor/ast_printer"
 
 module Rlox
   class Error < StandardError; end
