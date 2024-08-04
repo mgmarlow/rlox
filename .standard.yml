@@ -1,0 +1,4 @@
+# rlox uses symbols for boolean tokens
+ignore:
+  - '**/*':
+    - Lint/BooleanSymbol

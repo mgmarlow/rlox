@@ -2,7 +2,6 @@
 
 module Rlox
   class Token
-    # rubocop:disable Lint/BooleanSymbol
     TOKEN_TYPES = [
       # single-character tokens.
       :left_paren, :right_paren, :left_brace, :right_brace,
@@ -23,7 +22,6 @@ module Rlox
 
       :eof
     ].freeze
-    # rubocop:enable Lint/BooleanSymbol
 
     attr_reader :type, :lexeme, :literal, :line
 
@@ -42,7 +40,6 @@ module Rlox
   end
 
   class Scanner
-    # rubocop:disable Lint/BooleanSymbol
     KEYWORDS = {
       "and" => :and,
       "class" => :class,
@@ -61,7 +58,6 @@ module Rlox
       "var" => :var,
       "while" => :while
     }.freeze
-    # rubocop:enable Lint/BooleanSymbol
 
     attr_reader :line, :tokens
 
