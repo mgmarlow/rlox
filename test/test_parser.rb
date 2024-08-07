@@ -138,15 +138,16 @@ class TestParser < Minitest::Test
   end
 
   def test_it_handles_unclosed_parens
-    got = parse("(3 + 2")
-    assert_nil got
-    assert_equal true, Rlox::Lox.had_error?
+    assert_raises Rlox::ParseError do
+      parse("(3 + 2")
+    end
   end
 
   def parse(str)
     scanner = Rlox::Scanner.new(str)
     tokens = scanner.scan_tokens
     parser = Rlox::Parser.new(tokens)
-    parser.parse
+    # Call private method to bubble up exception that is caught by #parse
+    parser.send(:expression)
   end
 end
