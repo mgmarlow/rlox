@@ -10,12 +10,36 @@ module Rlox
     end
 
     def parse
-      expression
+      statements = []
+
+      until done?
+        statements << statement
+      end
+
+      statements
     rescue ParseError
       nil
     end
 
     private
+
+    def statement
+      return print_statement if match?(:print)
+
+      expression_statement
+    end
+
+    def print_statement
+      value = expression
+      consume(:semicolon, "expect a ';' after value")
+      Stmt::Print.new(value)
+    end
+
+    def expression_statement
+      value = expression
+      consume(:semicolon, "expect a ';' after value")
+      Stmt::Expression.new(value)
+    end
 
     def expression
       equality

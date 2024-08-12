@@ -5,11 +5,21 @@ module Rlox
     class Interpreter
       class Unreachable < StandardError; end
 
-      def interpret(expr)
-        value = evaluate(expr)
-        puts stringify(value)
+      def interpret(statements)
+        statements.each { |stmt| execute(stmt) }
       rescue RuntimeError => e
         Lox.runtime_error(e)
+      end
+
+      def visit_expression_stmt(stmt)
+        evaluate(stmt.expression)
+        nil
+      end
+
+      def visit_print_stmt(stmt)
+        value = evaluate(stmt.expression)
+        puts stringify(value)
+        nil
       end
 
       def visit_literal_expr(expr)
@@ -75,6 +85,10 @@ module Rlox
 
       def evaluate(expr)
         expr.accept(self)
+      end
+
+      def execute(stmt)
+        stmt.accept(self)
       end
 
       def is_truthy(val)

@@ -7,119 +7,125 @@ class TestInterpreter < Minitest::Test
     @visitor = Rlox::Visitor::Interpreter.new
   end
 
+  def test_it_handles_expression_stmt
+    # todo
+  end
+
   def test_it_handles_literal_expr
-    got = interpret('"foobar"')
+    got = evaluate('"foobar"')
     assert_equal "foobar", got
 
-    got = interpret("2")
+    got = evaluate("2")
     assert_equal 2.0, got
 
-    got = interpret("nil")
+    got = evaluate("nil")
     assert_nil got
   end
 
   def test_it_handles_grouping_expr
-    got = interpret('("foobar")')
+    got = evaluate('("foobar")')
     assert_equal "foobar", got
   end
 
   def test_it_handles_unary_expr
-    got = interpret("!false")
+    got = evaluate("!false")
     assert_equal true, got
 
-    got = interpret("!true")
+    got = evaluate("!true")
     assert_equal false, got
 
-    got = interpret("!!true")
+    got = evaluate("!!true")
     assert_equal true, got
 
-    got = interpret("!!false")
+    got = evaluate("!!false")
     assert_equal false, got
 
-    got = interpret("-2")
+    got = evaluate("-2")
     assert_equal(-2.0, got)
   end
 
   def test_it_handles_binary_expr
-    got = interpret("2 * 2")
+    got = evaluate("2 * 2")
     assert_equal 4.0, got
 
-    got = interpret("2 / 2")
+    got = evaluate("2 / 2")
     assert_equal 1.0, got
 
-    got = interpret("2 - 2")
+    got = evaluate("2 - 2")
     assert_equal 0, got
 
-    got = interpret("2 + 2")
+    got = evaluate("2 + 2")
     assert_equal 4.0, got
 
-    got = interpret('"foo" + "bar"')
+    got = evaluate('"foo" + "bar"')
     assert_equal "foobar", got
 
-    got = interpret("2 > 2")
+    got = evaluate("2 > 2")
     assert_equal false, got
 
-    got = interpret("2 >= 2")
+    got = evaluate("2 >= 2")
     assert_equal true, got
 
-    got = interpret("2 < 2")
+    got = evaluate("2 < 2")
     assert_equal false, got
 
-    got = interpret("2 <= 2")
+    got = evaluate("2 <= 2")
     assert_equal true, got
 
-    got = interpret("2 == 2")
+    got = evaluate("2 == 2")
     assert_equal true, got
 
-    got = interpret("2 == nil")
+    got = evaluate("2 == nil")
     assert_equal false, got
 
-    got = interpret("nil == nil")
+    got = evaluate("nil == nil")
     assert_equal true, got
 
-    got = interpret("2 != 2")
+    got = evaluate("2 != 2")
     assert_equal false, got
   end
 
   def test_runtime_exception
     assert_raises Rlox::RuntimeError do
-      interpret('-"foobar"')
+      evaluate('-"foobar"')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foobar" > 3')
+      evaluate('"foobar" > 3')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foobar" >= 3')
+      evaluate('"foobar" >= 3')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foobar" < 3')
+      evaluate('"foobar" < 3')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foobar" <= 3')
+      evaluate('"foobar" <= 3')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foo" * "bar"')
+      evaluate('"foo" * "bar"')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('"foo" / "bar"')
+      evaluate('"foo" / "bar"')
     end
 
     assert_raises Rlox::RuntimeError do
-      interpret('2 - "foobar"')
+      evaluate('2 - "foobar"')
     end
   end
 
-  def interpret(str)
+  def evaluate(str)
     scanner = Rlox::Scanner.new(str)
     tokens = scanner.scan_tokens
     parser = Rlox::Parser.new(tokens)
-    expr = parser.parse
+    # I'm being lazy here by forming expressions via strings since
+    # it's convenient. It's a little bad for test hygiene though.
+    expr = parser.send(:expression)
     # Use private method since public method puts to stdout
     @visitor.send(:evaluate, expr)
   end

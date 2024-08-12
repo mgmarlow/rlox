@@ -3,6 +3,7 @@
 require_relative "rlox/version"
 require_relative "rlox/scanner"
 require_relative "rlox/expr"
+require_relative "rlox/stmt"
 require_relative "rlox/visitor"
 require_relative "rlox/visitor/ast_printer"
 require_relative "rlox/visitor/interpreter"
@@ -74,10 +75,10 @@ module Rlox
       scanner = Scanner.new(source)
       tokens = scanner.scan_tokens
       parser = Parser.new(tokens)
-      expr = parser.parse
+      statements = parser.parse
       return if Lox.had_error?
 
-      @interpreter.interpret(expr)
+      @interpreter.interpret(statements)
     end
   end
 
